@@ -1,6 +1,6 @@
 import { json, LoaderFunction } from "@remix-run/node";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react";
-import { Navbar } from "./components/Navbar";
+import Navbar from "./components/Navbar";
 import { getSession } from "./utils/auth.server";
 
 // This loader will be used by the root route to get the user session
