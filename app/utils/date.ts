@@ -129,3 +129,108 @@ export function endOfDay(date: Date): Date {
   result.setHours(23, 59, 59, 999);
   return result;
 }
+
+/**
+ * Gets the relative time until a due date
+ * @param dueDate The due date to check
+ * @returns An object with status and formatted string
+ */
+export function getDueDateStatus(dueDate: Date | string): { status: 'past' | 'upcoming' | 'future'; text: string } {
+  const now = new Date();
+  const due = typeof dueDate === 'string' ? new Date(dueDate) : new Date(dueDate);
+  
+  if (isNaN(due.getTime())) {
+    return { status: 'future', text: 'No due date' };
+  }
+  
+  const diffTime = due.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffTime < 0) {
+    return { 
+      status: 'past', 
+      text: `Past due ${formatDate(due, { month: 'short', day: 'numeric' })}`
+    };
+  } else if (diffDays <= 7) {
+    return { 
+      status: 'upcoming', 
+      text: `in ${diffDays} day${diffDays !== 1 ? 's' : ''}` 
+    };
+  } else {
+    return { 
+      status: 'future',
+      text: formatDate(due, { month: 'short', day: 'numeric' })
+    };
+  }
+}
+
+/**
+ * Formats a relative time (e.g., "2 hours ago")
+ * @param date The date to format
+ * @returns Formatted relative time string
+ */
+export function formatRelativeTime(date: Date | string): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : new Date(date);
+  
+  if (isNaN(dateObj.getTime())) {
+    return 'Unknown time';
+  }
+  
+  const seconds = Math.floor((Date.now() - dateObj.getTime()) / 1000);
+  
+  const intervals: Array<{
+    seconds: number;
+    text: string | ((sec: number) => string);
+  }> = [
+    { seconds: 60, text: 'less than a minute ago' },
+    { 
+      seconds: 3600, 
+      text: (sec: number) => `${Math.floor(sec / 60)} minutes ago` 
+    },
+    { 
+      seconds: 86400, 
+      text: (sec: number) => {
+        const hours = Math.floor(sec / 3600);
+        return hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+      }
+    },
+    { 
+      seconds: 604800, 
+      text: (sec: number) => {
+        const days = Math.floor(sec / 86400);
+        return days === 1 ? 'yesterday' : `${days} days ago`;
+      }
+    },
+    { 
+      seconds: 2592000, 
+      text: (sec: number) => {
+        const weeks = Math.floor(sec / 604800);
+        return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+      }
+    },
+    { 
+      seconds: 31536000, 
+      text: (sec: number) => {
+        const months = Math.floor(sec / 2592000);
+        return months <= 1 ? '1 month ago' : `${months} months ago`;
+      }
+    },
+    { 
+      seconds: Infinity, 
+      text: (sec: number) => {
+        const years = Math.floor(sec / 31536000);
+        return years <= 1 ? '1 year ago' : `${years} years ago`;
+      }
+    }
+  ];
+
+  for (const interval of intervals) {
+    if (seconds < interval.seconds) {
+      return typeof interval.text === 'function' 
+        ? interval.text(seconds) 
+        : interval.text;
+    }
+  }
+  
+  return formatDate(dateObj);
+}

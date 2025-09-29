@@ -7,7 +7,8 @@
     "build": "remix build",
     "start": "remix-serve build",
     "typecheck": "tsc",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "seed:categories": "ts-node prisma/seed-categories.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -34,7 +35,8 @@
   "devDependencies": {
     "@eslint/js": "^8.56.0",
     "@remix-run/dev": "1.19.3",
-    "@types/node": "^18.18.0",
+    "@tailwindcss/typography": "^0.5.19",
+    "@types/node": "^18.19.127",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "autoprefixer": "^10.4.16",
@@ -45,6 +47,7 @@
     "prisma": "^6.16.2",
     "remix": "1.19.3",
     "tailwindcss": "^3.3.5",
-    "typescript": "^5.3.0"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
   }
 }

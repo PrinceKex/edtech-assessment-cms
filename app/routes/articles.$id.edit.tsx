@@ -1,4 +1,4 @@
-import { ActionFunction, json, LoaderFunction } from "@remix-run/node";
+import { ActionFunction, json, LoaderFunction, redirect } from "@remix-run/node";
 import { useLoaderData, useNavigate } from "@remix-run/react";
 import { ArticleForm } from "~/components/articles/ArticleForm";
 import { prisma } from "~/db.server";
@@ -33,6 +33,11 @@ export const loader: LoaderFunction = async ({ request, params }) => {
 export const action: ActionFunction = async ({ request, params }) => {
   const userId = await requireUserId(request);
   const { id } = params;
+  
+  if (!id) {
+    throw new Response("Article ID is required", { status: 400 });
+  }
+  
   const formData = await request.formData();
   
   const title = formData.get("title") as string;
@@ -94,15 +99,8 @@ export const action: ActionFunction = async ({ request, params }) => {
       },
     });
 
-    return json(
-      { success: true, article: updatedArticle },
-      { 
-        status: 200,
-        headers: {
-          'Location': `/articles/${updatedArticle.id}`
-        }
-      }
-    );
+    // Redirect to the updated article
+    return redirect(`/articles/${updatedArticle.id}`);
   } catch (error) {
     console.error("Error updating article:", error);
     return json(

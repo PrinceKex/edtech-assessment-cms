@@ -50,12 +50,20 @@ export function TiptapEditor({ content, onChange, placeholder, className = '' }:
     },
   });
 
+  // Update content when the prop changes
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
+    if (!editor) return;
+    
+    const isContentDifferent = content !== editor.getHTML();
+    if (isContentDifferent) {
       editor.commands.setContent(content);
     }
+    
+    // Ensure the editor is editable
+    editor.setEditable(true);
   }, [content, editor]);
 
+  // Show loading state if editor isn't ready
   if (!editor) {
     return (
       <div className="flex items-center justify-center min-h-[300px] border rounded-lg bg-gray-50">

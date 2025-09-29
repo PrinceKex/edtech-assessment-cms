@@ -1,48 +1,14 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
-import React, { lazy, Suspense, useEffect, useState } from 'react';
+import { EditorContent, useEditor } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { useEffect, useState } from 'react';
 
 interface RichTextEditorProps {
   content?: string;
   onChange: (content: string) => void;
   placeholder?: string;
   className?: string;
-}
-
-// Lazy load the TiptapEditor component with named export
-const TiptapEditor = lazy(() => 
-  import('./TiptapEditor').then(module => ({ default: module.TiptapEditor }))
-);
-
-// Loading component for the editor
-function EditorLoading() {
-  return (
-    <div className="flex items-center justify-center min-h-[300px] border rounded-lg bg-gray-50">
-      <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
-    </div>
-  );
-}
-
-// Error boundary component
-function ErrorBoundary({ children }: { children: React.ReactNode }) {
-  const [hasError, setHasError] = React.useState(false);
-
-  React.useEffect(() => {
-    const errorHandler = (error: ErrorEvent) => {
-      console.error('Error in RichTextEditor:', error);
-      setHasError(true);
-    };
-
-    window.addEventListener('error', errorHandler);
-    return () => window.removeEventListener('error', errorHandler);
-  }, []);
-
-  if (hasError) {
-    return <div className="p-4 text-red-600 bg-red-50 rounded">Editor failed to load. Please refresh the page.</div>;
-  }
-
-  return <>{children}</>;
 }
 
 export function RichTextEditor({
@@ -52,26 +18,106 @@ export function RichTextEditor({
   className = "",
 }: RichTextEditorProps) {
   const [isMounted, setIsMounted] = useState(false);
-
+  
   useEffect(() => {
     setIsMounted(true);
+    return () => setIsMounted(false);
   }, []);
 
-  // Don't render anything on the server
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: content || '<p>Start typing here...</p>',
+    editorProps: {
+      attributes: {
+        class: 'min-h-[300px] p-4 focus:outline-none',
+      },
+    },
+    onUpdate: ({ editor }) => {
+      onChange(editor.getHTML());
+    },
+  });
+
+  // Update content when the prop changes
+  useEffect(() => {
+    if (!editor || !isMounted) return;
+    if (content !== editor.getHTML()) {
+      editor.commands.setContent(content || '<p>Start typing here...</p>');
+    }
+  }, [content, editor, isMounted]);
+
   if (!isMounted) {
-    return <EditorLoading />;
+    return (
+      <div className="min-h-[300px] border-2 border-dashed border-gray-300 rounded-lg p-4">
+        <p>Loading editor...</p>
+      </div>
+    );
+  }
+
+  if (!editor) {
+    return (
+      <div className="min-h-[300px] border-2 border-dashed border-red-300 rounded-lg p-4">
+        <p className="text-red-500">Failed to initialize editor</p>
+      </div>
+    );
   }
 
   return (
-    <ErrorBoundary>
-      <Suspense fallback={<EditorLoading />}>
-        <TiptapEditor
-          content={content}
-          onChange={onChange}
-          placeholder={placeholder}
-          className={className}
-        />
-      </Suspense>
-    </ErrorBoundary>
+    <div className={`border border-gray-300 rounded-lg overflow-hidden ${className}`}>
+      <MenuBar editor={editor} />
+      <div className="p-4 border-t border-gray-200">
+        <EditorContent editor={editor} />
+      </div>
+    </div>
+  );
+}
+
+function MenuBar({ editor }: { editor: any }) {
+  if (!editor) {
+    return null;
+  }
+
+  return (
+    <div className="border-b border-gray-200 bg-white p-2 flex flex-wrap gap-1">
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().toggleBold().run()}
+        className={`p-2 rounded ${
+          editor.isActive('bold') ? 'bg-gray-200' : 'hover:bg-gray-100'
+        }`}
+        title="Bold"
+      >
+        <span className="font-bold">B</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+        className={`p-2 rounded ${
+          editor.isActive('italic') ? 'bg-gray-200' : 'hover:bg-gray-100'
+        }`}
+        title="Italic"
+      >
+        <em>I</em>
+      </button>
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+        className={`p-2 rounded ${
+          editor.isActive('bulletList') ? 'bg-gray-200' : 'hover:bg-gray-100'
+        }`}
+        title="Bullet List"
+      >
+        •
+      </button>
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        className={`p-2 rounded ${
+          editor.isActive('orderedList') ? 'bg-gray-200' : 'hover:bg-gray-100'
+        }`}
+        title="Numbered List"
+      >
+        1.
+      </button>
+    </div>
   );
 }

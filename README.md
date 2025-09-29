@@ -1,73 +1,100 @@
-# React + TypeScript + Vite
+# EdTech Assessment CMS
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern content management system for managing educational content, built with Remix, React, TypeScript, and Tailwind CSS.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Node.js (v18 or later)
+- npm (v9 or later) or yarn
+- PostgreSQL (for database)
+- Supabase account (for authentication)
 
-## React Compiler
+## Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd edtech-assessment-cms
+   ```
 
-## Expanding the ESLint configuration
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+3. **Set up environment variables**
+   Create a `.env` file in the root directory and add the following variables:
+   ```env
+   # For local development
+   DIRECT_URL="postgresql://postgres:postgres@localhost:5432/edtech_cms?schema=public"
+   
+   # For production (if using Supabase)
+   # DIRECT_URL="postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-REF].supabase.co:5432/postgres"
+   
+   # Session and authentication
+   SESSION_SECRET="your-session-secret"
+   
+   # Supabase configuration (if using Supabase)
+   SUPABASE_URL="your-supabase-url"
+   SUPABASE_ANON_KEY="your-supabase-anon-key"
+   ```
+   
+   Replace the placeholders with your actual database credentials and Supabase details.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+4. **Set up the database**
+   Run database migrations:
+   ```bash
+   npx prisma migrate dev
+   ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+5. **Seed initial data** (optional)
+   ```bash
+   npx prisma db seed
+   ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Running the Application
+
+### Development Mode
+```bash
+# Start the development server
+npm run dev
+# or
+yarn dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Production Build
+```bash
+# Build the application
+npm run build
+# or
+yarn build
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Start the production server
+npm start
+# or
+yarn start
 ```
+
+## Available Scripts
+
+- `dev` - Start the development server
+- `build` - Create a production build
+- `start` - Start the production server
+- `lint` - Run ESLint
+- `format` - Format code with Prettier
+- `typecheck` - Run TypeScript type checking
+- `test` - Run tests
+
+## Tech Stack
+
+- [Remix](https://remix.run/) - Full-stack web framework
+- [React](https://react.dev/) - UI library
+- [TypeScript](https://www.typescriptlang.org/) - Type-safe JavaScript
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+- [Prisma](https://www.prisma.io/) - Database ORM
+- [Supabase](https://supabase.com/) - Authentication and database
+- [PostgreSQL](https://www.postgresql.org/) - Database

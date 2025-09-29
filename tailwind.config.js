@@ -13,8 +13,27 @@ module.exports = {
       stroke: {
         'current': 'currentColor',
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: '100%',
+            '--tw-prose-body': 'var(--foreground)',
+            '--tw-prose-headings': 'var(--foreground)',
+            '--tw-prose-links': 'var(--primary)',
+            '--tw-prose-links-hover': 'var(--primary/90)',
+            '--tw-prose-underline': 'var(--primary/20)',
+            '--tw-prose-underline-hover': 'var(--primary)',
+            '--tw-prose-bold': 'var(--foreground)',
+            '--tw-prose-counters': 'var(--muted-foreground)',
+            '--tw-prose-bullets': 'var(--muted-foreground)',
+          },
+        },
+      },
     },
   },
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
   corePlugins: {
     // Ensure SVG elements can be styled with width/height
     preflight: true,

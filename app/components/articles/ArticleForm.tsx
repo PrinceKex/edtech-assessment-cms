@@ -1,5 +1,6 @@
 import { Form, useNavigation } from "@remix-run/react";
 import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { RichTextEditor } from "~/components/editor/RichTextEditor";
 
 // Local type definition for Category
@@ -25,6 +26,12 @@ interface ArticleFormProps {
 export function ArticleForm({ categories, initialData = {}, errors = {} }: ArticleFormProps) {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
+  const [content, setContent] = useState(initialData.content || "");
+
+  // Update content when initialData changes (for edit mode)
+  useEffect(() => {
+    setContent(initialData.content || "");
+  }, [initialData.content]);
 
   return (
     <Form method="post" className="space-y-6">
@@ -153,20 +160,18 @@ export function ArticleForm({ categories, initialData = {}, errors = {} }: Artic
             <input 
               type="hidden" 
               name="content" 
-              defaultValue={initialData.content || ""} 
+              defaultValue={content}
               id="content" 
               aria-describedby="content-error"
             />
             <RichTextEditor
-              content={initialData.content || ""}
-              onChange={(content) => {
-                // Update the hidden input with the HTML content
+              content={content}
+              onChange={(newContent) => {
+                setContent(newContent);
+                // Update the hidden input value directly
                 const input = document.getElementById("content") as HTMLInputElement;
                 if (input) {
-                  input.value = content;
-                  // Trigger a change event to ensure Remix picks up the change
-                  const event = new Event('input', { bubbles: true });
-                  input.dispatchEvent(event);
+                  input.value = newContent;
                 }
               }}
               placeholder="Write your article content here..."

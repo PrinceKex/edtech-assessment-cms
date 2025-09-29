@@ -1,4 +1,4 @@
-import { json, LoaderFunction } from "@remix-run/node";
+import { ActionFunction, json, LoaderFunction, redirect } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
 import { prisma } from "~/db.server";
 import { formatDate } from "~/utils";
@@ -44,6 +44,41 @@ export const loader: LoaderFunction = async ({ request, params }) => {
   } catch (error) {
     console.error("Error fetching article:", error);
     throw new Response("Error loading article", { status: 500 });
+  }
+};
+
+export const action: ActionFunction = async ({ request, params }) => {
+  const userId = await requireUserId(request);
+  const { id } = params;
+
+  try {
+    // First, verify the article exists and the user is the author
+    const article = await prisma.article.findUnique({
+      where: { id },
+      select: { authorId: true }
+    });
+
+    if (!article) {
+      throw new Response("Article not found", { status: 404 });
+    }
+
+    if (article.authorId !== userId) {
+      throw new Response("Unauthorized", { status: 403 });
+    }
+
+    // Delete the article
+    await prisma.article.delete({
+      where: { id }
+    });
+
+    // Redirect to the articles list after successful deletion
+    return redirect('/articles');
+  } catch (error) {
+    console.error("Error deleting article:", error);
+    return json(
+      { error: "Failed to delete article" },
+      { status: 500 }
+    );
   }
 };
 
