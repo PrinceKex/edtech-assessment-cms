@@ -6,6 +6,11 @@ node_modules/
 # Testing
 /coverage
 
+backup/
+temp-remix-app/
+build/
+.cache/
+
 # Production
 /build
 /dist
