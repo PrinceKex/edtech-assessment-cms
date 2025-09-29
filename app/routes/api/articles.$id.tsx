@@ -65,12 +65,52 @@ async function handleUpdateArticle(request: Request, params: { id?: string }) {
   const userId = await requireUserId(request);
   
   try {
+    if (!params.id) {
+      return json(
+        { error: 'Article ID is required' },
+        { status: 400 }
+      );
+    }
+
     const data = await request.json();
     
-    // First, verify the article exists and belongs to the user
+    // Validate required fields
+    if (!data.title) {
+      return json(
+        { error: 'Title is required' },
+        { status: 400 }
+      );
+    }
+    
+    // Generate slug if not provided
+    const slug = data.slug || data.title.toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w-]+/g, '');
+
+    // Check for duplicate slug
+    const existingWithSlug = await prisma.article.findFirst({
+      where: {
+        slug,
+        id: { not: params.id } // Exclude current article
+      },
+      select: { id: true }
+    });
+
+    if (existingWithSlug) {
+      return json(
+        { error: 'An article with this slug already exists' },
+        { status: 409 } // Conflict
+      );
+    }
+    
+    // Verify the article exists and belongs to the user
     const existingArticle = await prisma.article.findUnique({
       where: { id: params.id },
-      select: { authorId: true }
+      select: { 
+        id: true,
+        authorId: true,
+        slug: true
+      }
     });
 
     if (!existingArticle) {
@@ -87,20 +127,47 @@ async function handleUpdateArticle(request: Request, params: { id?: string }) {
         { status: 403 }
       );
     }
+
+    // Verify category exists if provided
+    if (data.categoryId) {
+      const category = await prisma.category.findUnique({
+        where: { id: data.categoryId }
+      });
+      
+      if (!category) {
+        return json(
+          { error: 'Category not found' },
+          { status: 400 }
+        );
+      }
+    }
     
+    const updateData: any = {
+      title: data.title,
+      slug,
+      content: data.content || '',
+      excerpt: data.excerpt || (data.content ? data.content.substring(0, 200) + '...' : ''),
+      featuredImage: data.featuredImage || null,
+      isPublished: Boolean(data.isPublished),
+      updatedAt: new Date(),
+    };
+
+    // Only update publishedAt if the publish status changed
+    if (data.isPublished && !existingArticle.publishedAt) {
+      updateData.publishedAt = new Date();
+    } else if (data.isPublished === false) {
+      updateData.publishedAt = null;
+    }
+
+    if (data.categoryId) {
+      updateData.categoryId = data.categoryId;
+    } else if (data.categoryId === null) {
+      updateData.categoryId = null; // Explicitly unset category
+    }
+
     const updatedArticle = await prisma.article.update({
       where: { id: params.id },
-      data: {
-        title: data.title,
-        slug: data.slug || data.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''),
-        content: data.content,
-        excerpt: data.excerpt || data.content.substring(0, 200) + '...',
-        featuredImage: data.featuredImage || null,
-        isPublished: data.isPublished,
-        publishedAt: data.isPublished ? (data.isPublished === false ? null : new Date()) : null,
-        categoryId: data.categoryId || null,
-        updatedAt: new Date(),
-      },
+      data: updateData,
       include: {
         author: {
           select: {
@@ -108,15 +175,35 @@ async function handleUpdateArticle(request: Request, params: { id?: string }) {
             name: true,
             email: true
           }
-        }
+        },
+        category: true
       }
     });
 
-    return json({ article: updatedArticle });
-  } catch (error) {
+    return json({ 
+      success: true,
+      article: updatedArticle 
+    });
+  } catch (error: unknown) {
     console.error(`Error updating article ${params.id}:`, error);
+    
+    // Handle Prisma errors
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+      return json(
+        { error: 'An article with this slug already exists' },
+        { status: 409 }
+      );
+    }
+    
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : 'An unknown error occurred';
+    
     return json(
-      { error: 'Failed to update article' },
+      { 
+        error: 'Failed to update article',
+        ...(process.env.NODE_ENV === 'development' && { details: errorMessage })
+      },
       { status: 500 }
     );
   }

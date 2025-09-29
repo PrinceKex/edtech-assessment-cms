@@ -1,25 +1,48 @@
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { Link } from "@remix-run/react";
+import { json, LoaderFunction } from "@remix-run/node";
+import { Link, useLoaderData } from "@remix-run/react";
+import { prisma } from "~/db.server";
 
-// Temporary mock data - will be replaced with real data later
-const articles = [
-  { 
-    id: 1, 
-    title: "Getting Started with Remix", 
-    slug: "getting-started-with-remix",
-    updatedAt: new Date('2025-09-28'),
-    status: 'Published'
-  },
-  { 
-    id: 2, 
-    title: "Building a CMS with Remix", 
-    slug: "building-a-cms-with-remix",
-    updatedAt: new Date('2025-09-29'),
-    status: 'Draft'
-  },
-];
+// Helper function to parse date strings into Date objects
+function parseDate(dateString: string): Date {
+  return new Date(dateString);
+}
+
+// Define the type for the article
+type Article = {
+  id: string;
+  title: string;
+  slug: string;
+  updatedAt: Date;
+  isPublished: boolean;
+};
+
+export const loader: LoaderFunction = async () => {
+  try {
+    const articles = await prisma.article.findMany({
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        updatedAt: true,
+        isPublished: true,
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+    
+    return json({ articles });
+  } catch (error) {
+    console.error("Error loading articles:", error);
+    return json(
+      { error: "Failed to load articles" },
+      { status: 500 }
+    );
+  }
+};
 
 export default function ArticlesIndex() {
+  const data = useLoaderData<{ articles: Article[]; error?: string }>();
+  const { articles = [], error } = data || {};
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-8">
       <div className="sm:flex sm:items-center">
@@ -69,16 +92,18 @@ export default function ArticlesIndex() {
                         </Link>
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          article.status === 'Published' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {article.status}
-                        </span>
+                        {article.isPublished ? (
+                          <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                            Published
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
+                            Draft
+                          </span>
+                        )}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {article.updatedAt.toLocaleDateString()}
+                        {parseDate(article.updatedAt).toLocaleDateString()}
                       </td>
                       <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                         <div className="flex justify-end space-x-2">
