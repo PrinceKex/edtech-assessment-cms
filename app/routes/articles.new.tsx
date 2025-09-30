@@ -18,6 +18,17 @@ export const loader: LoaderFunction = async ({ request }) => {
 export const action: ActionFunction = async ({ request }) => {
   try {
     const userId = await requireUserId(request);
+    if (!userId) {
+      return json(
+        { 
+          errors: { 
+            general: "You must be logged in to create an article." 
+          } 
+        },
+        { status: 401 }
+      );
+    }
+    
     const formData = await request.formData();
     
     // Log all form data for debugging

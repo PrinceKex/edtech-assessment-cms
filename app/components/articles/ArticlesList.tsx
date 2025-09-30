@@ -11,12 +11,15 @@ interface Article {
   id: string;
   title: string;
   slug: string;
-  excerpt?: string;
+  excerpt?: string | null;
   status: ArticleStatus;
-  category?: string;
-  dueDate?: string | null;
+  category?: string | null;
+  publishedAt?: string | null;
   updatedAt: string;
   isPublished: boolean;
+  author?: {
+    name?: string | null;
+  };
 }
 
 interface ArticlesListProps {
@@ -162,11 +165,11 @@ export function ArticlesList({ articles, onDelete, className = '' }: ArticlesLis
               <th 
                 scope="col" 
                 className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                onClick={() => requestSort('dueDate')}
+                onClick={() => requestSort('publishedAt')}
               >
                 <div className="flex items-center justify-center">
-                  Date
-                  {sortConfig?.key === 'dueDate' && (
+                  Published
+                  {sortConfig?.key === 'publishedAt' && (
                     <span className="ml-1">
                       {sortConfig.direction === 'asc' ? '↑' : '↓'}
                     </span>
@@ -201,7 +204,7 @@ export function ArticlesList({ articles, onDelete, className = '' }: ArticlesLis
           <tbody className="bg-white divide-y divide-gray-200">
             {sortedArticles.length > 0 ? (
               sortedArticles.map((article) => {
-                const dueDateStatus = article.dueDate ? getDueDateStatus(article.dueDate) : null;
+                const dueDateStatus = article.publishedAt ? getDueDateStatus(article.publishedAt) : null;
                 
                 return (
                   <tr key={article.id} className="hover:bg-gray-50">
@@ -240,7 +243,7 @@ export function ArticlesList({ articles, onDelete, className = '' }: ArticlesLis
                           </span>
                         </div>
                       ) : (
-                        <span className="text-sm text-gray-500">No due date</span>
+                        <span className="text-sm text-gray-500">Not published</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

@@ -9,12 +9,15 @@ type Article = {
   id: string;
   title: string;
   slug: string;
-  excerpt?: string;
+  excerpt?: string | null;
   status: ArticleStatus;
-  category?: string;
-  dueDate?: string | null;
+  category?: string | null;
+  publishedAt?: string | null;
   updatedAt: string;
   isPublished: boolean;
+  author?: {
+    name?: string | null;
+  };
 };
 
 export const loader: LoaderFunction = async () => {
@@ -31,23 +34,14 @@ export const loader: LoaderFunction = async () => {
     });
 
     // Transform the data to match the ArticlesList component's expected format
-    const formattedArticles = articles.map((article: { 
-      id: string;
-      title: string;
-      slug: string;
-      excerpt?: string | null;
-      isPublished: boolean;
-      category: { name: string } | null;
-      dueDate: Date | null;
-      updatedAt: Date;
-    }) => ({
+    const formattedArticles = articles.map((article) => ({
       id: article.id,
       title: article.title,
       slug: article.slug,
       excerpt: article.excerpt || undefined,
       status: (article.isPublished ? 'published' : 'draft') as ArticleStatus,
-      category: article.category?.name,
-      dueDate: article.dueDate ? new Date(article.dueDate).toISOString() : null,
+      category: article.category?.name || null,
+      publishedAt: article.publishedAt ? new Date(article.publishedAt).toISOString() : null,
       updatedAt: article.updatedAt.toISOString(),
       isPublished: article.isPublished,
     }));
