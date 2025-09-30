@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "remix dev",
     "build": "remix build",
-    "start": "remix-serve build",
+    "start": "dotenv -e .env -- remix-serve build",
     "typecheck": "tsc",
     "lint": "eslint .",
     "seed:categories": "ts-node prisma/seed-categories.ts"
@@ -40,6 +40,7 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "autoprefixer": "^10.4.16",
+    "dotenv-cli": "^10.0.0",
     "eslint": "^8.56.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.0",
